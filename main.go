@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"sync"
+	"time"
 
+	"github.com/Jeffail/tunny"
 	"github.com/xrjr/mcutils/pkg/ping"
 )
 
@@ -24,8 +25,6 @@ func getIps() []string {
 	}
 	return ips
 }
-
-var allNodesWaitGroup sync.WaitGroup
 
 func main() {
 	// // Loop over ips and ping them
@@ -49,37 +48,61 @@ func main() {
 	// }
 
 	// Loop over ips and batch them into an array of 10 ips, then ping them in a goroutine
-	perRoutine := 20
 	allIps := getIps()
 
-	file, err := os.Create("5-servers_with_players_and_is_1.19.X.txt")
+	startAt := "81.169.152.196"
+
+	file, err := os.OpenFile("9-servers_with_players_and_is_1.19.X.txt", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	defer file.Close()
 
-	for i := 0; i < len(allIps); i += perRoutine {
-		ips := allIps[i : i+perRoutine]
-		allNodesWaitGroup.Add(1)
-		go func(ips []string) {
-			defer allNodesWaitGroup.Done()
-			for _, ip := range ips {
-				properties, _, err := ping.Ping(ip, 25565)
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-				if strings.Contains(properties.Infos().Version.Name, "1.19") {
-					if properties.Infos().Players.Online > 0 {
-						file.WriteString(ip + "\n")
-					}
-				}
-				fmt.Println("IP:", ip, "Players:", properties.Infos().Players)
-			}
-		}(ips)
+	pool := tunny.NewFunc(1000, func(data interface{}) interface{} {
+		ip, ok := data.(string)
+		if !ok {
+			return nil
+		}
+		properties, ping, err := ping.Ping(ip, 25565)
+		if err != nil {
+			fmt.Println(err)
+			return nil
+		}
+
+		player_samples := properties.Infos().Players.Sample
+		str := ""
+		for _, sample := range player_samples {
+			str += strings.ReplaceAll(sample.Name, "\n", " ") + ", "
+		}
+
+		formattedData := fmt.Sprintf("%s (ping: %d, players: %d, version: %s, names: %s)\n", ip, ping, properties.Infos().Players.Online, properties.Infos().Version.Name, str)
+
+		file.WriteString(formattedData)
+		fmt.Println(formattedData)
+
+		return nil
+	})
+
+	defer pool.Close()
+	shouldStart := false
+
+	for _, ip := range allIps {
+		if ip == startAt {
+			shouldStart = true
+		}
+		if !shouldStart {
+			continue
+		}
+
+		go func(ip string) {
+			pool.Process(ip)
+		}(ip)
+	}
+
+	for pool.QueueLength() > 0 {
+		time.Sleep(time.Second)
 	}
 
 	// Write servers with players and is 1.19.X to file servers_with_players_and_is_1.19.X.txt
-
-	allNodesWaitGroup.Wait()
 }
