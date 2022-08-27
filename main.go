@@ -2,18 +2,17 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
 	"time"
-	"flag"
 
 	"github.com/Jeffail/tunny"
 	"github.com/xrjr/mcutils/pkg/ping"
 )
 
 func getIps(ips_file string) []string {
-	// Read ips from file possible_minecraft_servers.txt
 	file, err := os.Open(ips_file)
 	if err != nil {
 		fmt.Println(err)
@@ -65,8 +64,6 @@ func main() {
 
 	// Loop over ips and batch them into an array of 10 ips, then ping them in a goroutine
 	allIps := getIps(ipsfileFlag)
-
-	//var startAt string = "218.148.136.167"
 
 	file, err := os.OpenFile(outfileFlag, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
