@@ -13,7 +13,7 @@ import (
 
 func getIps() []string {
 	// Read ips from file possible_minecraft_servers.txt
-	file, err := os.Open("possible_minecraft_servers.txt")
+	file, err := os.Open("real_mc_servers.txt")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -50,9 +50,9 @@ func main() {
 	// Loop over ips and batch them into an array of 10 ips, then ping them in a goroutine
 	allIps := getIps()
 
-	startAt := "81.169.152.196"
+	var startAt string = "218.148.136.167"
 
-	file, err := os.OpenFile("9-servers_with_players_and_is_1.19.X.txt", os.O_APPEND|os.O_WRONLY, 0644)
+	file, err := os.OpenFile("server-map12.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -76,7 +76,11 @@ func main() {
 			str += strings.ReplaceAll(sample.Name, "\n", " ") + ", "
 		}
 
-		formattedData := fmt.Sprintf("%s (ping: %d, players: %d, version: %s, names: %s)\n", ip, ping, properties.Infos().Players.Online, properties.Infos().Version.Name, str)
+		formattedData := fmt.Sprintf(
+			"%s (ping: %d, players: %d, version: %s, modt: %s names: %s)\n",
+			ip, ping, properties.Infos().Players.Online, properties.Infos().Version.Name,
+			properties.Infos().Description, str,
+		)
 
 		file.WriteString(formattedData)
 		fmt.Println(formattedData)
@@ -85,11 +89,12 @@ func main() {
 	})
 
 	defer pool.Close()
-	shouldStart := false
+	shouldStart := true
 
 	for _, ip := range allIps {
 		if ip == startAt {
 			shouldStart = true
+			continue
 		}
 		if !shouldStart {
 			continue
