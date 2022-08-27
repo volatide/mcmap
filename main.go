@@ -90,7 +90,7 @@ func main() {
 		}
 
 		formattedData := fmt.Sprintf(
-			"%s (ping: %d, players: %d, version: %s, motd: %s names: %s)\n",
+			"%s (ping: %d, players: %d, version: \"%s\", motd: \"%s\", names: [%s])\n",
 			ip, ping, properties.Infos().Players.Online, properties.Infos().Version.Name,
 			properties.Infos().Description, str,
 		)
