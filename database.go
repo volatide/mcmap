@@ -1,9 +1,9 @@
-package database 
+package main
 
 import (
     "fmt"
 
-    "github.com/go-pg/pg/v10"
+    // "github.com/go-pg/pg/v10"
 )
 
 

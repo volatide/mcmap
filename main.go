@@ -32,8 +32,35 @@ var help = flag.Bool("help", false, "Show help")
 var outfileFlag = "output.txt"
 var ipsfileFlag = "ips.txt"
 var numThreadsFlag = 1000
-var portFlag = 25565
 var startAtFlag = ""
+
+var minPort = 1337
+var maxPort = 65535
+
+func pingIpPort(iptarget string, port int, file os.File) bool {
+	properties, ping, err := ping.Ping(iptarget, port)
+	if err != nil {
+		fmt.Println(err)
+		return false 
+	}
+
+	player_samples := properties.Infos().Players.Sample
+	str := ""
+	for _, sample := range player_samples {
+		str += strings.ReplaceAll(sample.Name, "\n", " ") + ", "
+	}
+
+	formattedData := fmt.Sprintf(
+		"%s (ping: %d, players: %d, version: \"%s\", motd: \"%s\", names: [%s])\n",
+		iptarget, ping, properties.Infos().Players.Online, properties.Infos().Version.Name,
+		properties.Infos().Description, str,
+	)
+
+	file.WriteString(formattedData)
+	fmt.Println(formattedData)
+
+	return true
+}
 
 func main() {
 	// Binds the flags
@@ -41,7 +68,6 @@ func main() {
 	flag.StringVar(&ipsfileFlag, "i", "", "File containing all the IPv4s separated by linebreaks (input).")
 	flag.StringVar(&startAtFlag, "r", "", "Start at this IPv4 (resume).")
 	flag.IntVar(&numThreadsFlag, "n", 1000, "Number of scan workers (threads).")
-	flag.IntVar(&portFlag, "p", 25565, "Server port to use.")
 
 	// Parse the flags
 	flag.Parse()
@@ -77,26 +103,14 @@ func main() {
 		if !ok {
 			return nil
 		}
-		properties, ping, err := ping.Ping(ip, portFlag)
-		if err != nil {
-			fmt.Println(err)
-			return nil
+
+		if !pingIpPort(ip, 25565, *file) {
+			port := minPort
+			for port <= maxPort {
+				pingIpPort(ip, port, *file)
+				port += 1
+			}
 		}
-
-		player_samples := properties.Infos().Players.Sample
-		str := ""
-		for _, sample := range player_samples {
-			str += strings.ReplaceAll(sample.Name, "\n", " ") + ", "
-		}
-
-		formattedData := fmt.Sprintf(
-			"%s (ping: %d, players: %d, version: \"%s\", motd: \"%s\", names: [%s])\n",
-			ip, ping, properties.Infos().Players.Online, properties.Infos().Version.Name,
-			properties.Infos().Description, str,
-		)
-
-		file.WriteString(formattedData)
-		fmt.Println(formattedData)
 
 		return nil
 	})
