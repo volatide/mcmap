@@ -90,9 +90,9 @@ func main() {
 		}
 
 		formattedData := fmt.Sprintf(
-			"%s (ping: %d, players: %d, version: \"%s\", motd: \"%s\", names: [%s])\n",
-			ip, ping, properties.Infos().Players.Online, properties.Infos().Version.Name,
-			properties.Infos().Description, str,
+			"%s (ping: %d, players: %d/%d, version: \"%s\", motd: \"%s\", names: [%s]) Favicon: %s\n",
+			ip, ping, properties.Infos().Players.Online, properties.Infos().Players.Max, properties.Infos().Version.Name,
+			properties.Infos().Description, str, properties.Infos().Favicon,
 		)
 
 		file.WriteString(formattedData)
