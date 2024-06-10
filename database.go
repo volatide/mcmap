@@ -4,6 +4,8 @@ import (
     "fmt"
 
     // "github.com/go-pg/pg/v10"
+    "github.com/go-pg/pg/v10"
+	"github.com/xrjr/mcutils/pkg/ping"
 )
 
 
@@ -73,6 +75,7 @@ type ScanEntryPlayerRelation struct {
 	scanEntryId	string
 }
 
+// ScanEntry
 type ScanEntry struct {
     id				string	
 	server			Server	
@@ -88,5 +91,9 @@ type ScanEntry struct {
 }
 
 func (entry ScanEntry) String() string {
-	return fmt.Sprintf("[%s] id=%s motd=%s version=%s players=(%d/%d)", entry.server.host, entry.id, entry.motd, entry.version, entry.playerCount, entry.maxPlayers)
+	return fmt.Sprintf("[%s] id=%s motd=\"%s\" version=%s players=(%d/%d)", entry.server.host, entry.id, entry.motd, entry.version, entry.playerCount, entry.maxPlayers)
+}
+
+func registerScanEntry(ping Ping) ScanEntry {
+	
 }
